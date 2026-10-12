@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+logs/
+data/raw/
+data/translated/
+.pytest_cache/
+

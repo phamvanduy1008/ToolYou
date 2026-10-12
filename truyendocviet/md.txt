@@ -1,0 +1,430 @@
+Hãy tạo một project Node.js mới dùng Playwright để crawl truyện từ website:
+
+https://truyendocviet.shop/doc-truyen/thai-co-than-ton/read/2134503.html
+
+Mục tiêu là crawl lần lượt toàn bộ chương của truyện “Thái Cổ Thần Tôn”, bắt đầu từ URL trên, sau đó đi theo nút “Chương sau” hoặc đường dẫn chương tiếp theo trong HTML. Không được tự cộng ID chương vì ID có thể không liên tục.
+
+Yêu cầu kỹ thuật:
+
+1. Tạo project hoàn chỉnh trong thư mục mới:
+
+crawl_thai_co_than_ton
+
+2. Dùng:
+
+* Node.js
+* Playwright
+* CommonJS hoặc ES Module đều được, nhưng cấu hình phải chạy ngay.
+* Không dùng Selenium.
+* Không phụ thuộc vào việc mở F12.
+* Website có thể chặn F12, chuột phải hoặc DevTools bằng JavaScript, nhưng crawler chỉ cần đọc DOM sau khi trang tải xong.
+
+3. Cài đặt cần thiết:
+
+npm init -y
+npm install playwright
+npx playwright install chromium
+
+4. Tạo các file:
+
+* package.json
+* crawler.js
+* config.js
+* README.md
+* thư mục output
+* file progress.json để lưu tiến độ
+
+5. Cấu hình trong config.js:
+
+* startUrl
+* outputFolder
+* delayMin
+* delayMax
+* maxRetries
+* headless
+* maxChapters
+* storySlug
+
+Giá trị mặc định:
+
+startUrl:
+https://truyendocviet.shop/doc-truyen/thai-co-than-ton/read/2134503.html
+
+storySlug:
+thai-co-than-ton
+
+delayMin:
+3000
+
+delayMax:
+6000
+
+maxRetries:
+3
+
+headless:
+true
+
+maxChapters:
+0
+
+Trong đó maxChapters = 0 nghĩa là chạy đến khi không còn chương sau.
+
+6. Trình duyệt Playwright phải có cấu hình giống người dùng bình thường:
+
+* User-Agent Chrome trên Windows
+* locale vi-VN
+* viewport 1366x768
+* timezone Asia/Ho_Chi_Minh
+* JavaScript bật
+* chặn tải ảnh, font, video và quảng cáo để tăng tốc
+* không chặn request HTML, JavaScript hoặc API có thể chứa nội dung chương
+
+7. Khi mở mỗi chương:
+
+* dùng page.goto
+* waitUntil: domcontentloaded
+* timeout 60000 ms
+* chờ thêm khoảng 1–3 giây để nội dung JavaScript render
+* kiểm tra tiêu đề trang
+* kiểm tra URL hiện tại
+* kiểm tra trang có CAPTCHA, Cloudflare, trang lỗi, yêu cầu đăng nhập hoặc bị chặn không
+
+Nếu phát hiện CAPTCHA, Cloudflare challenge, đăng nhập hoặc nội dung trả phí thì dừng và ghi rõ lý do. Không viết code vượt CAPTCHA, paywall hoặc tài khoản.
+
+8. Tự động tìm selector nội dung chương.
+
+Thử lần lượt các selector phổ biến:
+
+#chapter-content
+.chapter-content
+#chapterContent
+.chapterContent
+.reading-content
+.reader-content
+.content-reading
+.chapter-body
+.entry-content
+article
+main
+
+Nếu không tìm được selector chính xác, hãy tự động phân tích các phần tử:
+
+article
+main
+div
+section
+[id*="content"]
+[class*="content"]
+[id*="chapter"]
+[class*="chapter"]
+[id*="read"]
+[class*="read"]
+
+Chọn phần tử phù hợp dựa trên:
+
+* innerText dài nhất
+* ít link điều hướng
+* không phải menu
+* không phải sidebar
+* không phải footer
+* không phải danh sách chương
+* có nhiều đoạn văn
+* chứa nội dung truyện thật
+
+Không được lấy toàn bộ body nếu body chứa menu, bình luận và nội dung rác.
+
+9. Làm sạch nội dung:
+
+* xóa tiêu đề website
+* xóa menu
+* xóa nút chương trước/chương sau
+* xóa quảng cáo
+* xóa dòng chia sẻ
+* xóa bình luận
+* xóa lời mời tải app
+* xóa nội dung lặp
+* xóa khoảng trắng thừa
+* chuẩn hóa xuống dòng
+* giữ nguyên dấu câu tiếng Việt
+* giữ mỗi đoạn truyện cách nhau một dòng
+* không tự sửa nội dung truyện
+* không tự tóm tắt
+* không tự dịch lại
+
+Nếu dòng đầu là tên chương thì giữ lại đúng một lần.
+
+10. Lấy tên chương bằng thứ tự ưu tiên:
+
+* h1
+* h2
+* phần tử có class hoặc id chứa chapter-title
+* document.title
+* dòng đầu của nội dung chương
+
+Làm sạch tên chương để dùng làm tên file hợp lệ trên Windows.
+
+Ví dụ:
+
+Chương 01: Thái tử trùng sinh
+
+Tên file:
+
+0001 - Chuong 01 - Thai tu trung sinh.txt
+
+Tên file cần bỏ ký tự không hợp lệ:
+
+\ / : * ? " < > |
+
+Nhưng nội dung bên trong file vẫn giữ nguyên tiếng Việt có dấu.
+
+11. Đánh số file theo thứ tự crawler đã đọc:
+
+0001
+0002
+0003
+
+Không dùng ID trên URL làm số chương.
+
+12. Tìm URL chương tiếp theo bằng nhiều cách:
+
+* a[rel="next"]
+* nút có text “Chương sau”
+* nút có text “Chương tiếp”
+* nút có text “Tiếp theo”
+* nút có text “Next”
+* thẻ a có class hoặc id chứa next
+* URL trong khu vực điều hướng chương
+
+Chỉ chấp nhận URL:
+
+* cùng domain truyendocviet.shop
+* có đường dẫn /doc-truyen/thai-co-than-ton/read/
+* chưa crawl trước đó
+* không phải chương hiện tại
+* không phải link danh sách chương
+
+Nếu có nhiều link phù hợp, ưu tiên link nằm trong khu vực điều hướng gần nội dung chương.
+
+13. Không tự cộng ID.
+
+Ví dụ tuyệt đối không viết logic:
+
+2134503 + 1
+
+Phải lấy href thật từ nút chương sau.
+
+14. Lưu từng chương ngay sau khi crawl thành công.
+
+Thư mục:
+
+output/thai-co-than-ton/
+
+Mỗi chương lưu một file txt riêng.
+
+Đồng thời tạo file:
+
+output/thai-co-than-ton/all_chapters.txt
+
+File all_chapters.txt nối toàn bộ chương theo thứ tự, giữa hai chương có dòng phân cách:
+
+============================================================
+
+15. Lưu tiến độ vào progress.json:
+
+{
+"lastUrl": "...",
+"nextUrl": "...",
+"chapterIndex": 1,
+"completedUrls": [],
+"failedUrls": [],
+"updatedAt": "..."
+}
+
+Sau mỗi chương thành công phải cập nhật progress.json ngay.
+
+Nếu chương trình bị tắt rồi chạy lại:
+
+* đọc progress.json
+* không crawl lại chương đã hoàn thành
+* tiếp tục từ nextUrl
+* không ghi đè file chương cũ nếu file đã hợp lệ
+
+16. Retry:
+
+Nếu trang lỗi hoặc nội dung quá ngắn:
+
+* thử lại tối đa maxRetries
+* mỗi lần thử tạo page mới
+* delay tăng dần
+* ghi log nguyên nhân
+* nếu vẫn lỗi thì lưu URL vào failedUrls
+* dừng crawler để tránh bỏ sót chuỗi chương
+
+Không tự nhảy sang chương khác khi chương hiện tại chưa crawl được.
+
+17. Kiểm tra nội dung hợp lệ:
+
+* nội dung tối thiểu 500 ký tự
+* không chứa chủ yếu menu hoặc danh sách liên kết
+* không chỉ có thông báo lỗi
+* không chỉ có tiêu đề chương
+* không bị trùng hoàn toàn với chương trước
+* tiêu đề và nội dung phải được ghi log
+
+18. Chống vòng lặp:
+
+Dùng Set để lưu URL đã truy cập.
+
+Nếu URL chương sau đã tồn tại trong Set thì dừng và báo:
+
+Phát hiện vòng lặp URL.
+
+19. Delay ngẫu nhiên giữa các chương:
+
+delay = random(delayMin, delayMax)
+
+Mặc định từ 3 đến 6 giây.
+
+Không gửi request đồng thời. Chỉ crawl tuần tự từng chương một.
+
+20. Log console rõ ràng:
+
+[START] Bắt đầu crawler
+[LOAD] Đang tải chương 1
+[TITLE] Chương 01: Thái tử trùng sinh
+[CONTENT] 12543 ký tự
+[SAVED] Đã lưu file
+[NEXT] URL chương tiếp theo
+[WAIT] Chờ 4.2 giây
+[RETRY] Thử lại lần 2
+[STOP] Không còn chương tiếp theo
+[ERROR] Lỗi cụ thể
+
+21. Tạo ảnh và HTML debug khi lỗi.
+
+Nếu không lấy được nội dung, lưu vào thư mục debug:
+
+* screenshot.png
+* page.html
+* body.txt
+* candidates.json
+
+Tên file debug phải chứa số thứ tự chương.
+
+Ví dụ:
+
+debug/0001-page.html
+debug/0001-body.txt
+debug/0001-screenshot.png
+debug/0001-candidates.json
+
+candidates.json phải chứa:
+
+* tag
+* id
+* className
+* textLength
+* linkCount
+* preview
+
+22. Chặn tài nguyên không cần thiết bằng page.route:
+
+Có thể chặn:
+
+* image
+* media
+* font
+* stylesheet từ domain quảng cáo
+* request đến các domain quảng cáo phổ biến
+
+Không chặn:
+
+* document
+* script
+* xhr
+* fetch
+
+Vì nội dung chương có thể tải qua JavaScript hoặc API.
+
+23. Bắt response mạng để debug.
+
+Ghi lại các request có URL hoặc content-type liên quan:
+
+* api
+* chapter
+* content
+* read
+* json
+
+Không in toàn bộ response body lớn ra console. Chỉ ghi:
+
+* status
+* content-type
+* URL
+
+24. Xử lý tín hiệu đóng chương trình:
+
+Bắt:
+
+SIGINT
+SIGTERM
+
+Khi người dùng nhấn Ctrl+C:
+
+* lưu progress.json
+* đóng browser
+* thoát an toàn
+
+25. README.md phải hướng dẫn đầy đủ:
+
+Cài:
+
+npm install
+npx playwright install chromium
+
+Chạy:
+
+node crawler.js
+
+Chạy thử 5 chương:
+
+sửa maxChapters thành 5 trong config.js
+
+Chạy chế độ hiện trình duyệt:
+
+headless: false
+
+Chạy tiếp sau khi bị dừng:
+
+node crawler.js
+
+Reset tiến độ:
+
+xóa progress.json và thư mục output/thai-co-than-ton
+
+26. Code phải:
+
+* viết đầy đủ, không pseudo-code
+* có xử lý lỗi
+* có comment ở các phần quan trọng
+* chạy được trên Windows
+* dùng path.join
+* dùng UTF-8
+* không dùng ký tự đường dẫn chỉ hoạt động trên Linux
+* không yêu cầu người dùng mở F12
+* không yêu cầu người dùng tự tìm selector trước
+* tự động tìm selector tốt nhất
+* không hard-code duy nhất một selector
+* không tự động vượt CAPTCHA, đăng nhập hoặc paywall
+
+27. Sau khi tạo code, hãy:
+
+* kiểm tra syntax
+* kiểm tra import
+* kiểm tra package.json
+* giải thích ngắn cấu trúc project
+* đưa chính xác các lệnh PowerShell để chạy
+* không chỉ mô tả, phải tạo đầy đủ nội dung từng file
+
+Ưu tiên độ ổn định, lưu tiến độ và không bỏ sót chương hơn tốc độ.

@@ -1,0 +1,5 @@
+Bat dau crawl 2026-08-02T15:15:58.203Z
+Thu lai trang muc luc lan 1/3: page.goto: net::ERR_ABORTED at https://truyennet.org/bach-luyen-thanh-tien
+Call log:
+[2m  - navigating to "https://truyennet.org/bach-luyen-thanh-tien", waiting until "domcontentloaded"[22m
+

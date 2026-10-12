@@ -1,0 +1,1 @@
+"""DTV EPUB collector."""

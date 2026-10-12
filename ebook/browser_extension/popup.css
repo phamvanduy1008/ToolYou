@@ -1,0 +1,41 @@
+body {
+  box-sizing: border-box;
+  width: 360px;
+  margin: 0;
+  padding: 16px;
+  font: 14px/1.45 system-ui, sans-serif;
+  color: #172033;
+  background: #f6f8fc;
+}
+h1 { margin: 0 0 8px; font-size: 18px; }
+p { margin: 0 0 10px; overflow-wrap: anywhere; }
+pre {
+  min-height: 70px;
+  margin: 0 0 12px;
+  padding: 10px;
+  white-space: pre-wrap;
+  border: 1px solid #ccd5e4;
+  border-radius: 8px;
+  background: white;
+}
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+button {
+  flex: 1;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 7px;
+  color: white;
+  background: #087ea4;
+  cursor: pointer;
+}
+button.secondary { background: #65758b; }
+button:disabled { opacity: .5; cursor: default; }
+input[type="file"] {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 8px;
+  border: 1px solid #ccd5e4;
+  border-radius: 7px;
+  background: white;
+}

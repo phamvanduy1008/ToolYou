@@ -1,0 +1,2 @@
+"""Novel crawler and translator."""
+

@@ -1,0 +1,37 @@
+{
+  "cookies": [
+    {
+      "name": "cf_clearance",
+      "value": "OSPAbqMQejobhZsRLssyZ2Emrr6UmN8O9gJjSFb81E0-1784813508-1.2.1.1-0xb7Jg9wuR4RlwdQTE8tDQhrcVEnyWLJu8rqjeNo0LGVCJAPpcBgzo6iyFtXn5F92fhPj.JcY.EZmboJn_5NvVj_qdE1vmzjUGEaTQr7MELpxGNpMpKkGXuhkqK95Vmci65.40IG3jDosxU9K_yk4Cz9rCgfNCDZZcSqrGTV15uU5yi_1gfdSURf6MpG4gDmq6DYYa5OBMdsqZABa4Pmlz4Wi4zESsd3I5pDphGN2E9iXNnzyAEhrpEP.N9JZEh0vRW1W2lOFDCOnVxHf64JJ0DIc3BZ_.lAA7zj45vCqx20RmV4S0a46FcjjfgxVExNG5mkdD.0wT0a7eUM0s.k.A",
+      "domain": ".truyendich.live",
+      "path": "/",
+      "expires": 1816349506.287238,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": "https://truyendich.live",
+      "_crHasCrossSiteAncestor": false
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.1.1794262395.1784813506",
+      "domain": ".truyendich.live",
+      "path": "/",
+      "expires": 1819373746.454411,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga_JV8B4ZF0C1",
+      "value": "GS2.1.s1784813506$o1$g1$t1784813746$j60$l0$h0",
+      "domain": ".truyendich.live",
+      "path": "/",
+      "expires": 1819373746.451628,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

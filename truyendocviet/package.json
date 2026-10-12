@@ -1,0 +1,20 @@
+{
+  "name": "crawl-thai-co-than-ton",
+  "version": "1.0.0",
+  "description": "Crawler for Thai Co Than Ton on truyendocviet.shop",
+  "main": "crawler.js",
+  "scripts": {
+    "start": "node crawler.js",
+    "check": "node --check crawler.js && node --check services/chapterAccessService.js && node --check middleware/requireChapterAccess.js && node --check tests/chapter-access.test.js && node --check tests/paywall.integration.test.js",
+    "test": "node --test tests/chapter-access.test.js",
+    "test:paywall": "node --test tests/paywall.integration.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.17.0",
+    "cheerio": "^1.2.0",
+    "html-entities": "^2.6.0"
+  }
+}

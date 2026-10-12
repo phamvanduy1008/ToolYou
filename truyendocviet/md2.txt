@@ -1,0 +1,565 @@
+Hãy kiểm tra và gia cố hệ thống paywall/VIP cho website truyện của tôi.
+
+Bối cảnh:
+Website có các chương miễn phí và chương VIP. Giao diện hiện thông báo:
+
+“Bạn cần VIP để đọc chương này”
+“Nâng cấp VIP all-access”
+“Hoặc mua riêng truyện”
+
+Mục tiêu:
+Đảm bảo người chưa đăng nhập hoặc chưa mua quyền không thể lấy nội dung chương VIP từ HTML, API, JavaScript, source code trang, cache hoặc bằng cách đổi ID chương.
+
+Đây là website của tôi và tôi chỉ yêu cầu kiểm tra bảo mật hợp pháp trên source code/local/staging do tôi cung cấp.
+
+Không được:
+- Viết công cụ vượt paywall.
+- Đánh cắp hoặc giả mạo tài khoản.
+- Bỏ qua xác thực.
+- Brute-force token, cookie, mật khẩu hoặc mã OTP.
+- Khai thác website bên thứ ba.
+- Tấn công phá hoại, DDoS hoặc gửi request hàng loạt.
+- Hướng dẫn người dùng lấy nội dung VIP trái phép.
+
+==================================================
+PHẦN 1: PHÂN TÍCH SOURCE CODE
+==================================================
+
+Hãy tự động đọc toàn bộ project và xác định:
+
+1. Framework đang sử dụng:
+- Node.js
+- Express
+- Next.js
+- NestJS
+- PHP
+- Laravel
+- WordPress
+- hoặc framework khác
+
+2. Các route liên quan:
+- trang đọc chương
+- API lấy chương
+- danh sách chương
+- đăng nhập
+- kiểm tra VIP
+- mua truyện
+- mua chương
+- quản lý subscription
+
+3. Các model hoặc bảng dữ liệu:
+- users
+- chapters
+- stories
+- subscriptions
+- purchases
+- orders
+- payments
+- roles
+- permissions
+
+4. Cách hệ thống xác thực:
+- session
+- cookie
+- JWT
+- OAuth
+- WordPress nonce
+- middleware tùy chỉnh
+
+5. Tìm tất cả vị trí trả về nội dung chương:
+- HTML render phía server
+- API JSON
+- GraphQL
+- AJAX
+- SSR
+- server actions
+- script nhúng trong HTML
+- thuộc tính data-*
+- biến JavaScript
+- localStorage
+- sessionStorage
+
+==================================================
+PHẦN 2: KIỂM TRA LỖI PAYWALL PHÍA FRONTEND
+==================================================
+
+Kiểm tra xem hệ thống có mắc lỗi sau không:
+
+1. Server vẫn trả toàn bộ nội dung chương VIP nhưng frontend chỉ:
+- display: none
+- visibility: hidden
+- blur
+- overlay
+- modal
+- xóa DOM bằng JavaScript
+- cắt chiều cao
+- khóa scroll
+
+2. Nội dung VIP xuất hiện trong:
+- View Source
+- HTML response
+- script JSON
+- window.__INITIAL_STATE__
+- __NEXT_DATA__
+- application/ld+json
+- comment HTML
+- React props
+- Vue state
+- Alpine state
+- data-content
+- data-chapter
+- source map
+
+3. API trả nội dung trước rồi frontend mới kiểm tra VIP.
+
+4. API trả nội dung nhưng chỉ ẩn bằng JavaScript.
+
+Nếu phát hiện các lỗi này, phải sửa để server không gửi nội dung cho người không có quyền.
+
+==================================================
+PHẦN 3: KIỂM TRA PHÂN QUYỀN PHÍA SERVER
+==================================================
+
+Mỗi request lấy nội dung chương phải kiểm tra đồng thời:
+
+- Chương có tồn tại không.
+- Chương có miễn phí không.
+- Người dùng đã đăng nhập chưa.
+- Tài khoản có VIP còn hiệu lực không.
+- Người dùng đã mua truyện chưa.
+- Người dùng đã mua riêng chương chưa.
+- Giao dịch đã thanh toán thành công chưa.
+- Quyền đọc có đúng storyId và chapterId không.
+- Tài khoản có bị khóa không.
+- Subscription có hết hạn không.
+
+Không được chỉ tin dữ liệu do frontend gửi lên như:
+
+isVip=true
+role=vip
+hasPurchased=true
+price=0
+storyId tùy ý
+userId tùy ý
+
+Mọi quyền truy cập phải lấy từ session/token đã xác minh và kiểm tra lại trong database.
+
+==================================================
+PHẦN 4: KIỂM TRA IDOR
+==================================================
+
+Kiểm tra lỗi đổi ID trực tiếp:
+
+/read/2134503
+/read/2134504
+/api/chapter/2134503
+/api/chapter/2134504
+
+Yêu cầu:
+
+- Người dùng được đọc chương A không đồng nghĩa được đọc chương B.
+- Người mua truyện A không được đọc truyện B.
+- Không được lấy userId từ query/body để kiểm tra quyền.
+- Phải lấy userId từ session hoặc token đã xác thực.
+- Kiểm tra quyền theo từng tài nguyên.
+- ID không tồn tại trả về 404.
+- Không có quyền trả về 403.
+- Chưa đăng nhập trả về 401.
+
+Không tự động tăng ID để thu thập dữ liệu thật. Chỉ tạo unit test/integration test với dữ liệu test hoặc môi trường local/staging.
+
+==================================================
+PHẦN 5: KIỂM TRA API
+==================================================
+
+Liệt kê toàn bộ API có thể trả nội dung chương.
+
+Với mỗi API, kiểm tra ba trường hợp:
+
+1. Người chưa đăng nhập.
+2. Người đã đăng nhập nhưng không có VIP.
+3. Người có quyền hợp lệ.
+
+Kết quả mong muốn:
+
+Người chưa đăng nhập:
+
+HTTP 401
+
+{
+  "error": "UNAUTHENTICATED"
+}
+
+Người đã đăng nhập nhưng không có quyền:
+
+HTTP 403
+
+{
+  "error": "FORBIDDEN"
+}
+
+Người có quyền:
+
+HTTP 200
+
+{
+  "title": "...",
+  "content": "..."
+}
+
+Response 401 và 403 tuyệt đối không được chứa:
+
+- content
+- contentHtml
+- body
+- rawContent
+- encryptedContent
+- preview quá dài
+- chapterText
+- dữ liệu có thể giải mã phía client
+
+==================================================
+PHẦN 6: CACHE VÀ CDN
+==================================================
+
+Kiểm tra nguy cơ nội dung VIP bị cache công khai.
+
+Response chương VIP nên có:
+
+Cache-Control: private, no-store, max-age=0
+Pragma: no-cache
+Vary: Cookie, Authorization
+
+Không được dùng:
+
+Cache-Control: public
+
+cho nội dung cá nhân hóa.
+
+Kiểm tra:
+- CDN cache
+- reverse proxy
+- Cloudflare
+- Nginx
+- Varnish
+- Next.js cache
+- Redis page cache
+- WordPress page cache
+- service worker
+- browser cache
+
+Không cache chung nội dung chương VIP giữa nhiều tài khoản.
+
+==================================================
+PHẦN 7: TOKEN, COOKIE VÀ SESSION
+==================================================
+
+Kiểm tra cấu hình cookie:
+
+- HttpOnly
+- Secure
+- SameSite=Lax hoặc Strict
+- thời hạn hợp lý
+- rotate session sau đăng nhập
+- invalidate session khi đăng xuất
+- không lưu quyền VIP vĩnh viễn trong cookie phía client
+
+Nếu dùng JWT:
+
+- xác minh chữ ký
+- xác minh exp
+- xác minh issuer
+- xác minh audience nếu có
+- không chấp nhận alg=none
+- không tin role/isVip từ token cũ sau khi quyền đã hết hạn
+- có cơ chế revoke hoặc kiểm tra subscription trong database
+
+==================================================
+PHẦN 8: XỬ LÝ HẾT HẠN VÀ THANH TOÁN
+==================================================
+
+Kiểm tra:
+
+- VIP đã hết hạn không còn quyền đọc.
+- Giao dịch pending không được đọc.
+- Giao dịch failed không được đọc.
+- Giao dịch refunded phải mất quyền.
+- Webhook thanh toán phải xác minh chữ ký.
+- Không tin trạng thái thanh toán từ frontend.
+- Không cho người dùng tự gửi price=0.
+- Kiểm tra quyền sở hữu order trước khi áp dụng quyền.
+
+==================================================
+PHẦN 9: RATE LIMIT VÀ LOG
+==================================================
+
+Thêm rate limit hợp lý cho:
+
+- API chương
+- đăng nhập
+- kiểm tra thanh toán
+- danh sách chương
+
+Không khóa nhầm người đọc bình thường.
+
+Ghi log các sự kiện:
+
+- truy cập chương VIP bị từ chối
+- nhiều request chương liên tiếp bất thường
+- thử truy cập chapterId không thuộc truyện
+- session hết hạn
+- token không hợp lệ
+- lỗi quyền truy cập
+- thay đổi trạng thái subscription
+
+Không ghi vào log:
+
+- mật khẩu
+- token đầy đủ
+- cookie đầy đủ
+- nội dung chương VIP
+- thông tin thanh toán nhạy cảm
+
+==================================================
+PHẦN 10: TẠO HÀM KIỂM TRA QUYỀN TẬP TRUNG
+==================================================
+
+Tạo một service/hàm duy nhất để kiểm tra quyền, ví dụ:
+
+canReadChapter(userId, chapterId)
+
+Hàm phải trả về cấu trúc rõ ràng:
+
+{
+  allowed: true,
+  reason: "FREE_CHAPTER"
+}
+
+hoặc:
+
+{
+  allowed: false,
+  reason: "VIP_REQUIRED"
+}
+
+Các reason có thể gồm:
+
+- FREE_CHAPTER
+- ACTIVE_VIP
+- STORY_PURCHASED
+- CHAPTER_PURCHASED
+- UNAUTHENTICATED
+- VIP_EXPIRED
+- PAYMENT_PENDING
+- PAYMENT_FAILED
+- ACCOUNT_BLOCKED
+- FORBIDDEN
+
+Không lặp logic kiểm tra quyền ở nhiều controller khác nhau.
+
+==================================================
+PHẦN 11: LUỒNG BACKEND MONG MUỐN
+==================================================
+
+Logic chuẩn:
+
+1. Nhận chapterId.
+2. Validate chapterId.
+3. Truy vấn chapter.
+4. Nếu không tồn tại: 404.
+5. Nếu chương miễn phí: trả nội dung.
+6. Nếu chương VIP:
+   - chưa đăng nhập: 401
+   - tài khoản bị khóa: 403
+   - kiểm tra VIP còn hiệu lực
+   - kiểm tra mua truyện
+   - kiểm tra mua chương
+7. Không có quyền: 403.
+8. Có quyền: trả nội dung.
+9. Thiết lập Cache-Control phù hợp.
+10. Không gửi nội dung VIP trong response lỗi.
+
+==================================================
+PHẦN 12: PLAYWRIGHT SECURITY TEST
+==================================================
+
+Tạo bộ test Playwright hoặc integration test chạy trên local/staging.
+
+Dùng các biến môi trường:
+
+BASE_URL=
+FREE_CHAPTER_URL=
+VIP_CHAPTER_URL=
+NORMAL_USER_EMAIL=
+NORMAL_USER_PASSWORD=
+VIP_USER_EMAIL=
+VIP_USER_PASSWORD=
+
+Các test:
+
+1. Người chưa đăng nhập mở chương miễn phí:
+- thấy nội dung.
+
+2. Người chưa đăng nhập mở chương VIP:
+- thấy thông báo khóa.
+- HTML không chứa nội dung thật.
+- script không chứa nội dung thật.
+- API không trả nội dung.
+
+3. Người thường mở chương VIP:
+- HTTP/API trả 403.
+- không có content trong response.
+
+4. Người VIP mở chương VIP:
+- đọc được nội dung.
+
+5. Người mua riêng truyện:
+- đọc được đúng truyện đã mua.
+- không đọc được truyện chưa mua.
+
+6. Đổi chapterId:
+- server kiểm tra lại quyền.
+- không bị IDOR.
+
+7. VIP hết hạn:
+- không đọc được.
+
+8. Đăng xuất:
+- refresh trang không còn nội dung VIP.
+- back button không hiển thị nội dung từ cache.
+
+9. Request không có cookie:
+- không được trả nội dung VIP.
+
+10. Request với cookie giả:
+- không được trả nội dung VIP.
+
+Không brute force, không tự động crawl hàng loạt và không gửi quá nhiều request.
+
+==================================================
+PHẦN 13: UNIT TEST
+==================================================
+
+Tạo unit test cho hàm canReadChapter:
+
+- chương miễn phí
+- người dùng null
+- VIP đang hoạt động
+- VIP hết hạn
+- đã mua truyện
+- đã mua chương
+- thanh toán pending
+- thanh toán failed
+- tài khoản bị khóa
+- chapter không tồn tại
+- mua truyện khác
+- mua chapter khác
+
+Mock database rõ ràng.
+
+==================================================
+PHẦN 14: FILE CẦN TẠO
+==================================================
+
+Tùy framework hiện tại, tạo hoặc sửa:
+
+- middleware/auth
+- middleware/requireChapterAccess
+- services/chapterAccessService
+- controllers/chapterController
+- routes/chapterRoutes
+- tests/chapter-access.test
+- tests/paywall.spec
+- SECURITY_AUDIT.md
+- .env.example
+
+Không thay đổi kiến trúc project không cần thiết.
+
+==================================================
+PHẦN 15: BÁO CÁO
+==================================================
+
+Tạo file SECURITY_AUDIT.md gồm:
+
+1. Tóm tắt hệ thống.
+2. Các route liên quan.
+3. Các lỗi tìm thấy.
+4. Mức độ:
+   - Critical
+   - High
+   - Medium
+   - Low
+
+5. Với mỗi lỗi ghi:
+   - vị trí file
+   - dòng code
+   - nguyên nhân
+   - tác động
+   - cách sửa
+   - trạng thái đã sửa/chưa sửa
+
+6. Danh sách test đã chạy.
+7. Kết quả test.
+8. Các rủi ro còn lại.
+9. Hướng triển khai production an toàn.
+
+==================================================
+PHẦN 16: QUY TẮC SỬA CODE
+==================================================
+
+- Đọc code hiện tại trước khi sửa.
+- Không đoán framework.
+- Không viết pseudo-code.
+- Code phải chạy được.
+- Không xóa tính năng đang hoạt động.
+- Không hard-code mật khẩu, token hoặc secret.
+- Dùng biến môi trường.
+- Validate input.
+- Dùng prepared statement hoặc ORM an toàn.
+- Không trả stack trace ra production.
+- Không tiết lộ nội dung chương VIP trong log.
+- Không xử lý quyền ở frontend.
+- Frontend chỉ hiển thị trạng thái do backend trả về.
+- Backend là nguồn quyết định cuối cùng.
+
+==================================================
+PHẦN 17: CÁCH THỰC HIỆN
+==================================================
+
+Thực hiện theo thứ tự:
+
+1. Quét cấu trúc project.
+2. Xác định framework.
+3. Tìm route đọc chương.
+4. Tìm nơi trả nội dung.
+5. Tìm logic xác thực/VIP.
+6. Viết báo cáo lỗi ban đầu.
+7. Sửa lỗi.
+8. Tạo unit test.
+9. Tạo integration/Playwright test.
+10. Chạy lint.
+11. Chạy test.
+12. Kiểm tra syntax.
+13. Tổng kết file đã thay đổi.
+
+Trước khi sửa, hãy in ra:
+
+- framework phát hiện được
+- file route chương
+- file controller
+- file auth middleware
+- file kiểm tra VIP
+- model liên quan
+- cách nội dung chương được trả về
+
+Sau khi sửa, cung cấp:
+
+- danh sách file đã sửa
+- mô tả thay đổi
+- lệnh cài dependency
+- lệnh chạy test
+- lệnh chạy project
+- các biến môi trường cần cấu hình
+
+Ưu tiên cao nhất:
+Người không có quyền tuyệt đối không nhận được nội dung chương VIP từ server, kể cả trong HTML, JSON, script, cache hoặc API lỗi.

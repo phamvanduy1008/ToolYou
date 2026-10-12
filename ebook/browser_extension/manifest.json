@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "DTV EPUB Exporter",
+  "version": "1.1.0",
+  "description": "Xuất HTML truyện DTV bằng điều hướng Chrome để nhập vào EPUB Collector.",
+  "minimum_chrome_version": "100",
+  "permissions": ["tabs", "scripting", "storage", "unlimitedStorage"],
+  "host_permissions": ["https://dtv-ebook.com.vn/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "DTV EPUB Exporter",
+    "default_popup": "popup.html"
+  }
+}

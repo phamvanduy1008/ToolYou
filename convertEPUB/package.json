@@ -1,0 +1,7 @@
+{
+  "name": "epub-chapter-extractor",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test", "extract": "node extract.js" },
+  "dependencies": { "adm-zip": "^0.5.16", "cheerio": "^1.2.0" }
+}

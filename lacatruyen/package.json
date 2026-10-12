@@ -1,0 +1,16 @@
+{
+  "name": "lacatruyen-crawler",
+  "version": "1.0.0",
+  "description": "Crawler Next.js chapter data from lacatruyen.vip and save decrypted chapters as TXT for TTS.",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "audit": "node scripts/audit.js"
+  },
+  "dependencies": {
+    "axios": "^1.17.0",
+    "cheerio": "^1.2.0",
+    "crypto-js": "^4.2.0"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+data/browser-state.json
+data/browser-profile/
+data/progress.json
+output/
+debug/
+screenshots/
+logs/

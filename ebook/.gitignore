@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+downloads/
+data/books.csv
+data/downloaded.json
+data/top50.csv
+# Generated crawl exports are kept locally.
+data/*.json
